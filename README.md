@@ -8,7 +8,10 @@ The landscapes will be generated with a series of combinations of the RMSF, nati
 Command line: python GMPP.py /path/to/smog/files.
 
 Example Landscapes for 1UBQ:
-<img width="640" height="641" alt="image" src="https://github.com/user-attachments/assets/20c92fd3-6ef5-40fa-8d35-4afae9c2c77c" /> <img width="1279" height="660" alt="image" src="https://github.com/user-attachments/assets/0daca45f-6634-44ad-8dfd-65bfa1663101" /> <img width="678" height="652" alt="image" src="https://github.com/user-attachments/assets/cb2d989e-c608-4e27-a61a-97ddf3205638" />
+<img width="640" height="641" alt="image" src="https://github.com/user-attachments/assets/20c92fd3-6ef5-40fa-8d35-4afae9c2c77c" /> 
+<img width="678" height="652" alt="image" src="https://github.com/user-attachments/assets/cb2d989e-c608-4e27-a61a-97ddf3205638" />
+<img width="656" height="631" alt="image" src="https://github.com/user-attachments/assets/e88aea41-2638-4e1e-b504-169e36a85193" />
+
 
 
 
