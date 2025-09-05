@@ -241,7 +241,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
             frame_distances = md.compute_distances(cold_traj, pairs)
 
             # Count contacts within reasonable distance
-            contact_cutoff = 0.8  # nm, typical for CA contacts
+            contact_cutoff = 0.8  
             contacts_per_frame = np.sum(frame_distances < contact_cutoff, axis=1)
             max_contact_frame = np.argmax(contacts_per_frame)
 
@@ -392,7 +392,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
             ('Q', 'RMSD', 'Q(t)', 'RMSD (Å)', 'viridis'),
             ('Q', 'Rg', 'Q(t)', 'Rg (Å)', 'magma'), 
             ('RMSD', 'Rg', 'RMSD (Å)', 'Rg (Å)', 'cividis')
-        ] # plasma to inferno
+        ] 
 
         n_refs = len(results)
         n_combos = len(landscape_combinations)
@@ -445,7 +445,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                     free_energy_2d = free_energy_2d - min_fe
 
                     # Set a reasonable maximum for visualization
-                    max_fe = np.percentile(free_energy_2d, 100)  # Use 95th percentile as max
+                    max_fe = np.percentile(free_energy_2d, 100)  
                     free_energy_2d = np.minimum(free_energy_2d, max_fe)
 
                     # Plot the free energy landscape
@@ -543,7 +543,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                               extent=[q_edges[0], q_edges[-1], rmsd_edges[0], rmsd_edges[-1]],
                               cmap='jet', vmin=0, vmax=max_fe)
 
-                # Add contours
+                
                 Q_centers = (q_edges[:-1] + q_edges[1:])/2
                 RMSD_centers = (rmsd_edges[:-1] + rmsd_edges[1:])/2
                 X, Y = np.meshgrid(Q_centers, RMSD_centers)
@@ -556,7 +556,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                 ax.set_ylabel('RMSD (Å)', fontsize=14)
                 ax.set_title(f'Free Energy Landscape F(Q,RMSD)\n{ref_name} at T = {folding_temp}K', fontsize=16)
 
-                # Nice colorbar
+                
                 cbar = plt.colorbar(im, ax=ax, label='Free Energy (kT)')
                 cbar.ax.tick_params(labelsize=12)
 
@@ -604,3 +604,4 @@ def landscape(wrkdir, ft, cut_off, cont_file):
         return results
 
     analysis_results = comprehensive_landscape_analysis(wrkdir, ft, cut_off)
+
