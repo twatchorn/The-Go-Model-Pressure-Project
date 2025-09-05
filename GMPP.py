@@ -135,7 +135,7 @@ while iteration < max_iterations:
         q = cont.contact_analysis(cut_off, output_folder)
         
         
-        with open(f'{wrkdir}/{sysnm}_contacts.txt', 'w') as f:  # Changed 'a' to 'w' to overwrite
+        with open(f'{wrkdir}/{sysnm}_contacts.txt', 'w') as f:  
             f.write(f'Number of contacts framewise: \n')
             for i in q:
                 f.write(f'{i}\n')
@@ -169,9 +169,9 @@ while iteration < max_iterations:
             
         else:
             # Expand temperature range for next iteration
-            trngl = trng[0] + 41
-            trngh = trng[1] + 40
-            trng = (trngl, trngh)  # Update the tuple
+            trngl = tlow + 41
+            trngh = thigh + 40
+            trng = (tlow, thigh)  
             iteration += 1
             
             with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
@@ -197,3 +197,4 @@ while iteration < max_iterations:
     except Exception as e:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write(f'Error running landscape analysis: {e}\n')
+
