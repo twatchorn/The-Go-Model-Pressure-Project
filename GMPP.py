@@ -89,7 +89,7 @@ iteration = 0
 while iteration < max_iterations:
     try:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
-            f.write(f'Iteration {iteration + 1}: Generating TPR Files for temperature range {trng[0]}-{trng[1]}K\n')
+            f.write(f'Iteration {iteration + 1}: Generating TPR Files for temperature range {tlow}-{thigh}K\n')
         
         
         tg.tprgen(tlow, thigh, dt, wrkdir)
@@ -169,9 +169,9 @@ while iteration < max_iterations:
             
         else:
             # Expand temperature range for next iteration
-            trngl = tlow + 41
-            trngh = thigh + 40
-            trng = (tlow, thigh)  
+            tlow = tlow + 41
+            thigh = thigh + 40
+            tlow, thigh = tlow, thigh 
             iteration += 1
             
             with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
