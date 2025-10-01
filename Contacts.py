@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 #----------------------------------------------------------------------------------------------------------------
 def contact_analysis(cut_off, wrkdir):
     cont_file = glob.glob(f'{wrkdir}/*.contacts')
-    os.mkdir(f'{wrkdir}/Contact Plots', exist_ok = True)
+    
     def best_hummer_q(traj, native, cont_file):
         """Compute the fraction of native contacts according the definition from
         Best, Hummer and Eaton [1]
@@ -57,7 +57,7 @@ def contact_analysis(cut_off, wrkdir):
         
         
         
-        df = pd.read_csv(cont_file, sep='\s+', usecols=[1, 3])
+        df = pd.read_csv(cont_file, sep='/s+', usecols=[1, 3])
         
         capairs = df.values
 
@@ -84,7 +84,7 @@ def contact_analysis(cut_off, wrkdir):
 
     def qplot(traj, cont_file, cut_off):
         #prepping the cont file
-        pairslist = pd.read_csv(cont_file, sep='\s+', usecols=[1, 3])
+        pairslist = pd.read_csv(cont_file, sep='/s+', usecols=[1, 3])
         capairs = pairslist.values
         natcounts = len(capairs)
         # extracting the native distances   
@@ -126,7 +126,7 @@ def contactgraphs(wrkdir, cut_off):
     xtc = glob.glob(f'{wrkdir}/MDOutputFiles/*.xtc')
     ca = glob.glob(f'{wrkdir}/MDOutputFiles/caonly.pdb')
     cont_file = glob.glob(f'{wrkdir}/*.contacts')
-
+    
     for file in xtc:
         t = md.load(file, top='f{wrkdir}/caonly.pdb')
         q, capairs = contact_analysis.best_hummer_q(t, t[0], cont_file)
@@ -139,7 +139,7 @@ def contactgraphs(wrkdir, cut_off):
         plt.gca().invert_yaxis()
         plt.xlabel('Residue #')
         plt.ylabel('Residue #')
-        plt.savefig(f"{file} Probability Map.jpg")
+        plt.savefig(f"{wrkdir}/MDOutputFiles/{file} Probability Map.jpg")
         plt.clf()
         ymin, ymax = 0, 1
 
@@ -149,4 +149,4 @@ def contactgraphs(wrkdir, cut_off):
         plt.ylabel('Q(t)')
         plt.title(f'Traditional Q from residues within 150% of native range, {file} K')
         plt.axhline(y=np.mean(qt), color='r', linestyle='--', label='Average')
-        plt.savefig(f'{wrkdir}/Contact Plots/{file} Q(t).jpg')
+        plt.savefig(f'{wrkdir}/MDOutputFiles/{file} Q(t).jpg')

@@ -1,14 +1,15 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import constants as c
+from scipy import constants
 import math as m
 import glob
 import seaborn as sns
 import pathlib   
 
-def WHAM(wrkdir):
-    xvg = glob.glob(f'{wrkdir}/*.xvg')
+def WHAM(wrkdir, tlow, thigh):
+    xvg = glob.glob(f'{wrkdir}/*potential.xvg')
+    
     def wham_iteration(histograms, bin_centers, bias_potentials, temperatures, max_iter=1000, tol=1e-8):
         """
         Standard WHAM implementation following Kumar et al. 1992
@@ -38,9 +39,10 @@ def WHAM(wrkdir):
         
         # Total counts in each window
         N_k = np.array([np.sum(hist) for hist in histograms])
-        
-        print(f"Windows: {n_windows}, Bins: {n_bins}")
-        print(f"Total counts per window: {N_k}")
+       
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"Windows: {n_windows}, Bins: {n_bins}")
+            f.write(f"Total counts per window: {N_k}")
         
         for iteration in range(max_iter):
             f_k_old = f_k.copy()
@@ -86,13 +88,16 @@ def WHAM(wrkdir):
             f_k = f_k - f_k[0]
             
             # Check convergence
-            if np.allclose(f_k, f_k_old, atol=tol):
-                print(f'WHAM converged after {iteration + 1} iterations')
-                print(f'Final free energies: {f_k}')
+            if np.allclose(f_k, f_k_old, atol=tol) & np.any(f_k)>0:
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+
+                    f.write(f'WHAM converged after {iteration + 1} iterations')
+                    f.write(f'Final free energies: {f_k}')
                 break
                 
             if iteration == max_iter - 1:
-                print('WHAM did not converge within maximum iterations')
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write('WHAM did not converge within maximum iterations')
         
         return f_k, rho_unbiased
 
@@ -196,18 +201,21 @@ def WHAM(wrkdir):
         # Read data from all files
         for file in xvg_files:
             # Extract temperature from filename
-            temp = int(pathlib.Path(file).stem)
-            temperatures.append(temp)
+            temp = pathlib.Path(file).stem.split('_')[0]
+        
+            np.append(temperatures, temp, axis=None)   
+            
             
             # Load potential energy data
             potentials = np.loadtxt(file, comments=['@', '#'], usecols=[1])
             potentials = potentials[1:]  # skip first point if needed
             all_energies.extend(potentials)
             
-            print(f'Loaded {len(potentials)} points from T={temp}K')
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write(f'Loaded {len(potentials)} points from T={temp}K')
         
         # Create temperature range for heat capacity from the simulation temperatures
-        T_min, T_max = min(temperatures), max(temperatures)
+        T_min, T_max = tlow, thigh
         # Create a smooth range with more points for better resolution
         temp_range = np.linspace(T_min * 0.9, T_max * 1.1, 200)
         
@@ -216,8 +224,9 @@ def WHAM(wrkdir):
         bin_edges = np.linspace(e_min, e_max, n_bins + 1)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
         
-        print(f'Energy range: {e_min:.2f} to {e_max:.2f} kJ/mol')
-        print(f'Bin width: {(e_max - e_min)/n_bins:.3f} kJ/mol')
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:    
+            f.write(f'Energy range: {e_min:.2f} to {e_max:.2f} kJ/mol')
+            f.write(f'Bin width: {(e_max - e_min)/n_bins:.3f} kJ/mol')
         
         # Create histograms for each window
         for i, file in enumerate(xvg_files):
@@ -238,8 +247,9 @@ def WHAM(wrkdir):
         ref_temp = temperatures[0]  # or choose your reference
         Z, degeneracy = calculate_partition_function(rho_unbiased, bin_centers, ref_temp, f_k[0])
         
-        print(f'Free energies: {f_k}')
-        print(f'Partition function at {ref_temp}K: {Z:.6e}')
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f'Free energies: {f_k}')
+            f.write(f'Partition function at {ref_temp}K: {Z:.6e}')
         
         # Calculate heat capacity over temperature range
         temps, heat_caps, energy_avgs, energy_vars = calculate_heat_capacity(bin_centers, degeneracy, temp_range)
@@ -247,31 +257,10 @@ def WHAM(wrkdir):
         # Plot results
         plt.figure(figsize=(15, 10))
         
-        # Top row: WHAM results
-        plt.subplot(2, 3, 1)
-        plt.plot(bin_centers, rho_unbiased)
-        plt.xlabel('Energy (kJ/mol)')
-        plt.ylabel('Unbiased Probability')
-        plt.title('Unbiased Distribution')
-        plt.yscale('log')
         
-        plt.subplot(2, 3, 2)
-        plt.plot(bin_centers, degeneracy)
-        plt.xlabel('Energy (kJ/mol)')
-        plt.ylabel('Density of States')
-        plt.title('Density of States')
-        plt.yscale('log')
-        
-        plt.subplot(2, 3, 3)
-        free_energy = -np.log(rho_unbiased + 1e-16)  # add small value to avoid log(0)
-        free_energy = free_energy - np.min(free_energy)  # normalize
-        plt.plot(bin_centers, free_energy)
-        plt.xlabel('Energy (kJ/mol)')
-        plt.ylabel('Free Energy (kT)')
-        plt.title('Free Energy Profile')
         
         # Bottom row: Thermodynamic properties
-        plt.subplot(2, 3, 4)
+        plt.subplot(2, 3, 1)
         plt.plot(temps, energy_avgs, 'b-', linewidth=2, label='<E>')
         plt.scatter(temperatures, [np.mean(np.loadtxt(f, comments=['@', '#'], usecols=[1])[1:]) 
                                 for f in xvg_files], c='red', s=50, zorder=5, label='Simulation <E>')
@@ -296,8 +285,9 @@ def WHAM(wrkdir):
         plt.grid(True, alpha=0.3)
         
         plt.tight_layout()
-        plt.show()
-        plt.savefig('WHAM and Thermodynamic Data.png')
+        
+        plt.savefig(f'{wrkdir}/MDOutputFiles/WHAM.png')
+
     
         max_cv_idx = np.argmax(heat_caps)
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:

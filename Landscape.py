@@ -13,7 +13,7 @@ import os
 def landscape(wrkdir, ft, cut_off, cont_file):
     def qplot(traj, cont_file, cut_off):
     #prepping the cont file
-        pairslist = pd.read_csv(cont_file, sep='\s+', usecols=[1, 3])
+        pairslist = pd.read_csv(cont_file, sep='/s+', usecols=[1, 3])
         capairs = pairslist.values
         natcounts = len(capairs)
         # extracting the native distances   
@@ -54,9 +54,10 @@ def landscape(wrkdir, ft, cut_off, cont_file):
         Extract multiple candidate reference structures using different methods
         """
 
-        print(f"{'='*60}")
-        print("EXTRACTING MULTIPLE REFERENCE STRUCTURES")
-        print(f"{'='*60}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"{'='*60}")
+            f.write("EXTRACTING MULTIPLE REFERENCE STRUCTURES")
+            f.write(f"{'='*60}")
 
         references = {}
         pdb_file = f'{wrkdir}/caonly.pdb'
@@ -73,16 +74,19 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                 continue
             
         if not temp_files:
-            print("No temperature-named XTC files found!")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write("No temperature-named XTC files found!")
             return {}
 
         temperatures = sorted(temp_files.keys())
-        print(f"Found temperatures: {temperatures}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"Found temperatures: {temperatures}")
 
         # Method 1: Coldest simulation - highest Q frame
-        print(f"\n{'-'*40}")
-        print("METHOD 1: Highest Q frame from coldest simulation")
-        print(f"{'-'*40}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"\n{'-'*40}")
+            f.write("METHOD 1: Highest Q frame from coldest simulation")
+            f.write(f"{'-'*40}")
 
         try:
             coldest_temp = min(temperatures)
@@ -115,15 +119,18 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                 'method': f'Highest Q frame ({max_q_frame}) from {coldest_temp}K'
             }
 
-            print(f"✓ Coldest ({coldest_temp}K) max Q frame: {max_q_frame}, Q = {q_values[max_q_frame]:.3f}")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write(f"✓ Coldest ({coldest_temp}K) max Q frame: {max_q_frame}, Q = {q_values[max_q_frame]:.3f}")
 
         except Exception as e:
-            print(f"✗ Error with coldest simulation method: {e}")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:    
+                f.write(f"✗ Error with coldest simulation method: {e}")
 
         # Method 2: Minimum radius of gyration from coldest simulation
-        print(f"\n{'-'*40}")
-        print("METHOD 2: Minimum Rg frame from coldest simulation")
-        print(f"{'-'*40}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"\n{'-'*40}")
+            f.write("METHOD 2: Minimum Rg frame from coldest simulation")
+            f.write(f"{'-'*40}")
 
         try:
             rg_values = md.compute_rg(cold_traj)
@@ -137,15 +144,18 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                 'method': f'Minimum Rg frame ({min_rg_frame}) from {coldest_temp}K'
             }
 
-            print(f"✓ Coldest ({coldest_temp}K) min Rg frame: {min_rg_frame}, Rg = {rg_values[min_rg_frame]*10:.2f} Å")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write(f"✓ Coldest ({coldest_temp}K) min Rg frame: {min_rg_frame}, Rg = {rg_values[min_rg_frame]*10:.2f} Å")
 
         except Exception as e:
-            print(f"✗ Error with min Rg method: {e}")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write(f"✗ Error with min Rg method: {e}")
 
         # Method 3: Starting structure (.gro file)
-        print(f"\n{'-'*40}")
-        print("METHOD 3: Starting structure (.gro file)")
-        print(f"{'-'*40}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"\n{'-'*40}")
+            f.write("METHOD 3: Starting structure (.gro file)")
+            f.write(f"{'-'*40}")
 
         try:
             gro_files = glob.glob(f'{wrkdir}/*.gro')
@@ -159,17 +169,21 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                     'method': f'Starting structure from {os.path.basename(gro_files[0])}'
                 }
 
-                print(f"✓ Starting structure: {os.path.basename(gro_files[0])}")
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write(f"✓ Starting structure: {os.path.basename(gro_files[0])}")
             else:
-                print("✗ No .gro file found")
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write("✗ No .gro file found")
 
         except Exception as e:
-            print(f"✗ Error loading .gro file: {e}")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:        
+                f.write(f"✗ Error loading .gro file: {e}")
 
         # Method 4: Minimum energy frame (if energy files available)
-        print(f"\n{'-'*40}")
-        print("METHOD 4: Minimum energy frame")
-        print(f"{'-'*40}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"\n{'-'*40}")
+            f.write("METHOD 4: Minimum energy frame")
+            f.write(f"{'-'*40}")
 
         for temp in temperatures[:3]:  # Check first few temperatures
             try:
@@ -191,16 +205,19 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                         'method': f'Min energy frame ({min_energy_frame}) from {temp}K'
                     }
 
-                    print(f"✓ T={temp}K min energy frame: {min_energy_frame}, E = {energies[min_energy_frame]:.2f}")
+                    with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                        f.write(f"✓ T={temp}K min energy frame: {min_energy_frame}, E = {energies[min_energy_frame]:.2f}")
                     break
 
             except Exception as e:
-                print(f"✗ Error with energy method for T={temp}K: {e}")
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write(f"✗ Error with energy method for T={temp}K: {e}")
 
         # Method 5: Most compact structure across all temperatures
-        print(f"\n{'-'*40}")
-        print("METHOD 5: Most compact structure across all temperatures")
-        print(f"{'-'*40}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"\n{'-'*40}")
+            f.write("METHOD 5: Most compact structure across all temperatures")
+            f.write(f"{'-'*40}")
 
         try:
             global_min_rg = float('inf')
@@ -224,16 +241,21 @@ def landscape(wrkdir, ft, cut_off, cont_file):
 
             if best_compact:
                 references['global_min_Rg'] = best_compact
-                print(f"✓ Global most compact: T={best_compact['temp']}K, frame {best_compact['frame']}, "
+                
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    
+                    f.write(f"✓ Global most compact: T={best_compact['temp']}K, frame {best_compact['frame']}, "
                       f"Rg = {best_compact['Rg']*10:.2f} Å")
 
         except Exception as e:
-            print(f"✗ Error with global compact method: {e}")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write(f"✗ Error with global compact method: {e}")
 
         # Method 6: Maximum contact formation frame
-        print(f"\n{'-'*40}")
-        print("METHOD 6: Maximum native contact formation")
-        print(f"{'-'*40}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"\n{'-'*40}")
+            f.write("METHOD 6: Maximum native contact formation")
+            f.write(f"{'-'*40}")
 
         try:
             # Use first frame of coldest as initial reference, then find frame with most contacts
@@ -241,7 +263,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
             frame_distances = md.compute_distances(cold_traj, pairs)
 
             # Count contacts within reasonable distance
-            contact_cutoff = 0.8  
+            contact_cutoff = 0.8  # nm, typical for CA contacts
             contacts_per_frame = np.sum(frame_distances < contact_cutoff, axis=1)
             max_contact_frame = np.argmax(contacts_per_frame)
 
@@ -253,15 +275,20 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                 'method': f'Max contacts frame ({max_contact_frame}) from {coldest_temp}K'
             }
 
-            print(f"✓ Max contacts: frame {max_contact_frame}, {contacts_per_frame[max_contact_frame]} contacts")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+
+                f.write(f"✓ Max contacts: frame {max_contact_frame}, {contacts_per_frame[max_contact_frame]} contacts")
 
         except Exception as e:
-            print(f"✗ Error with max contacts method: {e}")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+
+                f.write(f"✗ Error with max contacts method: {e}")
 
         # Save all reference structures as PDB files
-        print(f"\n{'-'*40}")
-        print("SAVING REFERENCE STRUCTURES")
-        print(f"{'-'*40}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"\n{'-'*40}")
+            f.write("SAVING REFERENCE STRUCTURES")
+            f.write(f"{'-'*40}")
 
         saved_refs = {}
         for ref_name, ref_data in references.items():
@@ -269,11 +296,14 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                 pdb_filename = f'{wrkdir}/ref_{ref_name}.pdb'
                 ref_data['traj'][ref_data['frame']].save_pdb(pdb_filename)
                 saved_refs[ref_name] = {**ref_data, 'pdb_file': pdb_filename}
-                print(f"✓ Saved {ref_name}: {pdb_filename}")
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write(f"✓ Saved {ref_name}: {pdb_filename}")
             except Exception as e:
-                print(f"✗ Error saving {ref_name}: {e}")
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write(f"✗ Error saving {ref_name}: {e}")
 
-        print(f"\nTotal reference structures extracted: {len(saved_refs)}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"\nTotal reference structures extracted: {len(saved_refs)}")
         return saved_refs
 
     def parse_xvg_file(xvg_file):
@@ -297,10 +327,10 @@ def landscape(wrkdir, ft, cut_off, cont_file):
         Calculate Q(t), RMSD, and Rg using all reference combinations
         Modified to use GROMACS for RMSD calculation
         """
-
-        print(f"{'='*60}")
-        print(f"CALCULATING ALL METRICS FOR T={folding_temp}K")
-        print(f"{'='*60}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"{'='*60}")
+            f.write(f"CALCULATING ALL METRICS FOR T={folding_temp}K")
+            f.write(f"{'='*60}")
 
         # Load target trajectory
         target_traj_file = f'{wrkdir}/{folding_temp}_whole_nopbc.xtc'
@@ -313,21 +343,27 @@ def landscape(wrkdir, ft, cut_off, cont_file):
             tpr_files = glob.glob(f'{wrkdir}/*.tpr')
             if tpr_files:
                 tpr_file = tpr_files[0]
-                print(f"Using TPR file: {tpr_file}")
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write(f"Using TPR file: {tpr_file}")
             else:
-                print("✗ No TPR file found for GROMACS RMSD calculation")
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:    
+                    f.write("✗ No TPR file found for GROMACS RMSD calculation")
                 return None
 
         try:
             target_traj = md.load(target_traj_file, top=pdb_file)
-            print(f"✓ Loaded target trajectory: {target_traj.n_frames} frames")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+
+                f.write(f"✓ Loaded target trajectory: {target_traj.n_frames} frames")
         except Exception as e:
-            print(f"✗ Error loading target trajectory: {e}")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write(f"✗ Error loading target trajectory: {e}")
             return None
 
         # Calculate Rg for target 
         rg_target = md.compute_rg(target_traj)  
-        print(f"✓ Calculated Rg: {np.mean(rg_target):.2f}±{np.std(rg_target):.2f} Å")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"✓ Calculated Rg: {np.mean(rg_target):.2f}±{np.std(rg_target):.2f} Å")
 
         results = {}
 
@@ -338,14 +374,16 @@ def landscape(wrkdir, ft, cut_off, cont_file):
             pairs = contacts_data.iloc[:, [1, 3]].values - 1
             pairs = pairs.astype(int)
         except (IndexError, FileNotFoundError):
-            print("✗ No contacts file found")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write("✗ No contacts file found")
             return None
 
         for ref_name, ref_data in references.items():
-            print(f"\n{'-'*30}")
-            print(f"REFERENCE: {ref_name}")
-            print(f"Method: {ref_data['method']}")
-            print(f"{'-'*30}")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write(f"\n{'-'*30}")
+                f.write(f"REFERENCE: {ref_name}")
+                f.write(f"Method: {ref_data['method']}")
+                f.write(f"{'-'*30}")
 
             try:
                 # Calculate Q(t) using this reference (keeping MDTraj for this)
@@ -354,10 +392,12 @@ def landscape(wrkdir, ft, cut_off, cont_file):
 
                 q = qplot(target_traj, contfile, cutoff)
                 q_values = np.array(q)
-                print(f'Successfully calculated Q(T) for {target_traj}')
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write(f'Successfully calculated Q(T) for {target_traj}')
 
                 rmsd_values = md.rmsd(target_traj, ref_traj, frame=ref_frame)
-                print(f'Successfully calculated RMSD for {target_traj}')
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write(f'Successfully calculated RMSD for {target_traj}')
 
                 results[ref_name] = {
                     'Q': q_values,
@@ -369,7 +409,8 @@ def landscape(wrkdir, ft, cut_off, cont_file):
 
 
             except Exception as e:
-                print(f"✗ Error calculating metrics for {ref_name}: {e}")
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                    f.write(f"✗ Error calculating metrics for {ref_name}: {e}")
 
         return results
     def create_landscape(wrkdir, folding_temp, results):
@@ -378,9 +419,10 @@ def landscape(wrkdir, ft, cut_off, cont_file):
         Like the ones shown in the ubiquitin/lysozyme examples
         """
 
-        print(f"{'='*60}")
-        print("CREATING 2D FREE ENERGY LANDSCAPES F(Q,RMSD)")
-        print(f"{'='*60}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"{'='*60}")
+            f.write("CREATING 2D FREE ENERGY LANDSCAPES F(Q,RMSD)")
+            f.write(f"{'='*60}")
 
         # Define the landscape combinations  
         # cmap ex = ListedColormap(["darkorange", "gold", "lawngreen", "lightseagreen"])
@@ -392,7 +434,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
             ('Q', 'RMSD', 'Q(t)', 'RMSD (Å)', 'viridis'),
             ('Q', 'Rg', 'Q(t)', 'Rg (Å)', 'magma'), 
             ('RMSD', 'Rg', 'RMSD (Å)', 'Rg (Å)', 'cividis')
-        ] 
+        ] # plasma to inferno
 
         n_refs = len(results)
         n_combos = len(landscape_combinations)
@@ -420,9 +462,9 @@ def landscape(wrkdir, ft, cut_off, cont_file):
 
                     # Debug: Check Q range
                     if x_metric == 'Q':
-                        print(f"Q range for {ref_name}: {np.min(x_data):.3f} - {np.max(x_data):.3f}")
+                        write(f"Q range for {ref_name}: {np.min(x_data):.3f} - {np.max(x_data):.3f}")
                     if y_metric == 'Q':
-                        print(f"Q range for {ref_name}: {np.min(y_data):.3f} - {np.max(y_data):.3f}")
+                        write(f"Q range for {ref_name}: {np.min(y_data):.3f} - {np.max(y_data):.3f}")
 
                     # Create 2D histogram P(Q,RMSD)
                     n_bins = 50
@@ -445,7 +487,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                     free_energy_2d = free_energy_2d - min_fe
 
                     # Set a reasonable maximum for visualization
-                    max_fe = np.percentile(free_energy_2d, 100)  
+                    max_fe = np.percentile(free_energy_2d, 100)  # Use 95th percentile as max
                     free_energy_2d = np.minimum(free_energy_2d, max_fe)
 
                     # Plot the free energy landscape
@@ -474,9 +516,10 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                     cbar.ax.tick_params(labelsize=10)
 
                     # Print landscape statistics
-                    print(f"\n{ref_name} - {x_metric} vs {y_metric}:")
-                    print(f"  Free energy range: 0 - {max_fe:.1f} kT")
-                    print(f"  Number of sampled bins: {np.sum(hist_2d > 0)}/{n_bins*n_bins}")
+                    with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                        f.write(f"\n{ref_name} - {x_metric} vs {y_metric}:")
+                        f.write(f"  Free energy range: 0 - {max_fe:.1f} kT")
+                        f.write(f"  Number of sampled bins: {np.sum(hist_2d > 0)}/{n_bins*n_bins}")
 
                     # Find and report minima
                     for x, y in zip(x_data, y_data):
@@ -486,9 +529,10 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                     if np.any(folded_mask) and np.any(unfolded_mask):
                         folded_rmsd = y_data[folded_mask] if y_metric == 'RMSD' else x_data[folded_mask]
                         unfolded_rmsd = y_data[unfolded_mask] if y_metric == 'RMSD' else x_data[unfolded_mask]
+                        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
 
-                        print(f"  Folded state (Q>0.7): RMSD = {np.mean(folded_rmsd):.2f}±{np.std(folded_rmsd):.2f} Å")
-                        print(f"  Unfolded state (Q<0.3): RMSD = {np.mean(unfolded_rmsd):.2f}±{np.std(unfolded_rmsd):.2f} Å")
+                            f.write(f"  Folded state (Q>0.7): RMSD = {np.mean(folded_rmsd):.2f}±{np.std(folded_rmsd):.2f} Å")
+                            f.write(f"  Unfolded state (Q<0.3): RMSD = {np.mean(unfolded_rmsd):.2f}±{np.std(unfolded_rmsd):.2f} Å")
 
                     # Save data
                     np.savez(f"{wrkdir}/MDOutputFiles/{folding_temp}K_{ref_name}_{x_metric}_{y_metric}_landscape.npz",
@@ -498,7 +542,8 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                              hist_2d=hist_2d, prob_2d=prob_2d)
 
                 except Exception as e:
-                    print(f"✗ Error for {ref_name} {x_metric} vs {y_metric}: {e}")
+                    with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                        f.write(f"✗ Error for {ref_name} {x_metric} vs {y_metric}: {e}")
                     ax.text(0.5, 0.5, f'Error:\n{str(e)[:50]}', ha='center', va='center', 
                            transform=ax.transAxes, fontsize=8, color='red')
                     ax.set_title(f'{ref_name}: {x_metric} vs {y_metric}\nERROR', color='red')
@@ -543,7 +588,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                               extent=[q_edges[0], q_edges[-1], rmsd_edges[0], rmsd_edges[-1]],
                               cmap='jet', vmin=0, vmax=max_fe)
 
-                
+                # Add contours
                 Q_centers = (q_edges[:-1] + q_edges[1:])/2
                 RMSD_centers = (rmsd_edges[:-1] + rmsd_edges[1:])/2
                 X, Y = np.meshgrid(Q_centers, RMSD_centers)
@@ -556,7 +601,7 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                 ax.set_ylabel('RMSD (Å)', fontsize=14)
                 ax.set_title(f'Free Energy Landscape F(Q,RMSD)\n{ref_name} at T = {folding_temp}K', fontsize=16)
 
-                
+                # Nice colorbar
                 cbar = plt.colorbar(im, ax=ax, label='Free Energy (kT)')
                 cbar.ax.tick_params(labelsize=12)
 
@@ -566,11 +611,11 @@ def landscape(wrkdir, ft, cut_off, cont_file):
                 plt.close()
 
             except Exception as e:
-                print(f"✗ Error creating high-res plot for {ref_name}: {e}")
-
-        print(f"\n{'='*50}")
-        print("2D FREE ENERGY LANDSCAPES COMPLETE!")
-        print(f"{'='*50}")
+                write(f"✗ Error creating high-res plot for {ref_name}: {e}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"\n{'='*50}")
+            f.write("2D FREE ENERGY LANDSCAPES COMPLETE!")
+            f.write(f"{'='*50}")
 
         return results
     def comprehensive_landscape_analysis(wrkdir, folding_temp, cutoff):
@@ -578,24 +623,27 @@ def landscape(wrkdir, ft, cut_off, cont_file):
         Complete analysis with correct 2D free energy landscapes
         """
 
-        print(f"{'='*70}")
-        print(f"COMPREHENSIVE LANDSCAPE ANALYSIS")
-        print(f"Target Temperature: {folding_temp}K")
-        print(f"Cutoff: {cutoff}")
-        print(f"{'='*70}")
+        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+            f.write(f"{'='*70}")
+            f.write(f"COMPREHENSIVE LANDSCAPE ANALYSIS")
+            f.write(f"Target Temperature: {folding_temp}K")
+            f.write(f"Cutoff: {cutoff}")
+            f.write(f"{'='*70}")
 
         # Step 1: Extract multiple reference structures
         references = extract_multiple_reference_structures(wrkdir)
 
         if not references:
-            print("No reference structures could be extracted!")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+                f.write("No reference structures could be extracted!")
             return None
 
         # Step 2: Calculate all metrics for all references
         results = calculate_all_metrics_combinations(wrkdir, folding_temp, cutoff, references)
 
         if not results:
-            print("No metrics could be calculated!")
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f: 
+                f.write("No metrics could be calculated!")
             return None
 
         # Step 3: Create correct 2D free energy landscapes
@@ -603,5 +651,4 @@ def landscape(wrkdir, ft, cut_off, cont_file):
 
         return results
 
-    analysis_results = comprehensive_landscape_analysis(wrkdir, ft, cut_off)
-
+    comprehensive_landscape_analysis(wrkdir, ft, cut_off)

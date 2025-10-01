@@ -1,7 +1,7 @@
 import os
 import mdtraj
 import numpy as np
-
+import glob
 
 def coarspdb(workdir):
     def extract_ca(input_file, output_file):
@@ -12,6 +12,7 @@ def coarspdb(workdir):
 
 
     input_file = glob.glob(f'{workdir}/*.pdb')
+    
     output_file = f'{workdir}/caonly.pdb'
-
-    extract_ca(input_file, output_file)
+    for file in input_file:
+        extract_ca(file, output_file)

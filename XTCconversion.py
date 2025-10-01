@@ -19,18 +19,18 @@ def xtcmods(wrkdir):
         output_path = f'{wrkdir}/{file_name}'
         
         process_whole = sp.Popen([
-            "gmx", 'trjconv', 
+            'trjconv', 
             '-f', xtc, 
             '-s', tpr, 
             '-o', output_path, 
             '-pbc', 'whole'
         ], stdout=sp.PIPE, stdin=sp.PIPE, stderr=sp.PIPE, text=True)
         
-        # Send group selection (assuming group 3, adjust as needed)
-        stdout, stderr = process_whole.communicate(input="3\n")
+        
+        stdout, stderr = process_whole.communicate(input="0\n")
         
         if process_whole.returncode != 0:
-            with open(f'{wrkdir}/GMPP log.txt') as f:
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
                 f.write(f"Error in whole step: {stderr}\n")
             return None
             
@@ -41,16 +41,16 @@ def xtcmods(wrkdir):
         output_path = f'{wrkdir}/{file_name}'
         
         process_nopbc = sp.Popen([
-            "gmx", 'trjconv', 
+            'trjconv', 
             '-f', xtc, 
             '-s', tpr, 
             '-o', output_path, 
-            '-pbc', 'mol', 
+            '-pbc', 'nojump', 
             '-center'
         ], stdout=sp.PIPE, stdin=sp.PIPE, stderr=sp.PIPE, text=True)
         
         # Send group selection for centering and output
-        stdout, stderr = process_nopbc.communicate(input="3\n3\n")
+        stdout, stderr = process_nopbc.communicate(input="0\n0\n")
         
         if process_nopbc.returncode != 0:
             with open(f'{wrkdir}/GMPP log.txt') as f:
@@ -64,17 +64,17 @@ def xtcmods(wrkdir):
         output_path = f'{wrkdir}/{file_name}'
         
         process_skip = sp.Popen([
-            'gmx', 'trjconv',  # Added 'gmx' prefix for consistency
+            'trjconv',  # Added 'gmx' prefix for consistency
             '-f', xtc, 
             '-s', tpr,  # Removed extra .tpr extension
             '-o', output_path, 
             '-skip', '100'
         ], stdout=sp.PIPE, stdin=sp.PIPE, stderr=sp.PIPE, text=True)
         
-        stdout, stderr = process_skip.communicate(input="3\n")
+        stdout, stderr = process_skip.communicate(input="0\n")
         
         if process_skip.returncode != 0:
-            with open(f'{wrkdir}/GMPP log.txt') as f:
+            with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
                 f.write(f"Error in skip step: {stderr}\n")
             return None
             
@@ -85,25 +85,27 @@ def xtcmods(wrkdir):
     tpr_files = glob.glob(f'{wrkdir}/*.tpr')
     
     for xtc_file in xtc_files:
+        if f'{pathlib.Path(xtc_file).stem}_nopbc_skip.xtc' != None:
+            continue
         for tpr_file in tpr_files:
             # Match files by stem (filename without extension)
             if pathlib.Path(tpr_file).stem == pathlib.Path(xtc_file).stem:
-                with open(f'{wrkdir}/GMPP log.txt') as f:
+                with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
                     f.write(f"Processing {xtc_file} with {tpr_file}\n")
                 
                 # Step 1: Make molecules whole
-                xtc_whole_path = whole(xtc_file, tpr_file)
-                if not xtc_whole_path:
-                    continue
+                #xtc_whole_path = whole(xtc_file, tpr_file)
+                #if not xtc_whole_path:
+                #    continue
                     
                 # Step 2: Remove PBC and center
-                xtc_nopbc_path = nopbc(xtc_whole_path, tpr_file)
+                xtc_nopbc_path = nopbc(xtc_file, tpr_file)
                 if not xtc_nopbc_path:
                     continue
                     
                 # Step 3: Skip frames
                 xtc_skip_path = skip(xtc_nopbc_path, tpr_file)
                 if xtc_skip_path:
-                    with open(f'{wrkdir}/GMPP log.txt') as f:
+                    with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
                         f.write(f"Successfully processed: {xtc_skip_path}\n")
 

@@ -14,7 +14,7 @@ import scipy.constants as c
 import matplotlib.ticker as ticker
 
 
-import tprgen as tg
+import tprgenie as tg
 import Contacts as cont
 import PDBmod as pm
 import maketable as table
@@ -93,7 +93,9 @@ while iteration < max_iterations:
         
         
         tg.tprgen(tlow, thigh, dt, wrkdir)
-        
+        dirt = glob.glob('*#')
+        for file in dirt:
+            os.remove(file)
     except Exception as e:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write(f'Error generating TPR files: {e}\n')
@@ -108,15 +110,21 @@ while iteration < max_iterations:
 
     # Check if simulations actually ran (look for .xtc files)
     xtc_files = glob.glob(f'{wrkdir}/*.xtc')
+    dirt = glob.glob('*#')
+
+    for file in dirt:
+
+        os.remove(file)
     if not xtc_files:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write('No XTC files found. Simulations may not have run successfully.\n')
-        # You might want to break here or continue depending on your workflow
+        break
+       
 
     try:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write('Generating Coarse Grained PDBs for RMSD Analysis and .xtc Conversions\n')
-        pm.coarspdb(output_folder)
+        pm.coarspdb(wrkdir)
     except Exception as e:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write(f'Error generating coarse grained PDBs: {e}\n')
@@ -124,7 +132,12 @@ while iteration < max_iterations:
     try:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write('Generating XTC Files\n')
-        xtc.xtcmods(output_folder)
+        xtc.xtcmods(wrkdir)
+        dirt = glob.glob('*#')
+
+        for file in dirt:
+
+            os.remove(file)
     except Exception as e:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write(f'Error generating XTC files: {e}\n')
@@ -132,13 +145,10 @@ while iteration < max_iterations:
     try:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write('Performing Contact Analysis\n')
-        q = cont.contact_analysis(cut_off, output_folder)
+        cont.contactgraphs(cut_off, output_folder)
         
         
-        with open(f'{wrkdir}/{sysnm}_contacts.txt', 'w') as f:  
-            f.write(f'Number of contacts framewise: \n')
-            for i in q:
-                f.write(f'{i}\n')
+        
                 
     except Exception as e:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
@@ -147,7 +157,12 @@ while iteration < max_iterations:
     try:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write('Generating XVG Files\n')
-        xvg.xvgenie(output_folder)
+        xvg.xvgenie(wrkdir)
+        dirt = glob.glob('*#')
+
+        for file in dirt:
+
+            os.remove(file)
     except Exception as e:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write(f'Error generating XVG files: {e}\n')
@@ -155,46 +170,51 @@ while iteration < max_iterations:
     try:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write('Performing Bimodality Test\n')
-        bimodal, foldingtemp = bt.bimodal(output_folder)
-        foldingtemp = os.path.splitext(foldingtemp)[0]
+        bimodal, foldingtemp = bt.bimodal(wrkdir)
+        
         
         if bimodal == True:
             with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
-                f.write(f'Tf = {foldingtemp} K\n')
-                f.write('Note: Due to lack of solvent, the folding temperature is significantly lower than in reality. The Q(t) and RMSD plots will show the fold populations\n')
-                f.write(f'Go Model Pressure Project has completed successfully\n')
-                f.write(f'Check output files to clarify results\n')
-                f.write(f'Thank you for using Go Model Pressure Project\n')
+                f.write(f'Bimodal Temp = {foldingtemp} K\n')
+                
             break  # Success - exit the loop
             
         else:
             # Expand temperature range for next iteration
             tlow = tlow + 41
             thigh = thigh + 40
-            tlow, thigh = tlow, thigh 
+              # Update the tuple
             iteration += 1
-            
+            tg.tprgen(tlow, thigh, dt, wrkdir)
             with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
-                f.write(f'No bimodal distribution found. Expanding temperature range to {trngl}-{trngh}K\n')
+                f.write(f'No bimodal distribution found. Expanding temperature range to {tlow}-{thigh}K\n')
                 
     except Exception as e:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write(f'Error performing bimodality test: {e}\n')
-        break
+        tlow = tlow + 41
+        thigh = thigh + 40
+        iteration += 1
 
     # After the loop, regardless of outcome
-    try:
-        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
-            f.write('Running WHAM analysis\n')
-        WHAM.WHAM(output_folder)
-    except Exception as e:
-        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
-            f.write(f'Error running WHAM analysis: {e}\n')
-    try:
-        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
-            f.write('Running Landscape analysis\n')
-        ls.landscape(output_folder, foldingtemp, cut_off)
-    except Exception as e:
-        with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
-            f.write(f'Error running landscape analysis: {e}\n')
-
+try:
+    with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+        f.write('Running WHAM analysis\n')
+    WHAM.WHAM(wrkdir, tlow, thigh)
+except Exception as e:
+    with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+        f.write(f'Error running WHAM analysis: {e}\n')
+try:
+    with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+        f.write('Running Landscape analysis\n')
+    cont_file= glob.glob(f'{wrkdir}/*.contacts')
+    cont_file = cont_file[0]
+    ls.landscape(wrkdir, foldingtemp, cut_off, cont_file)
+    with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+        f.write('GMPP has FInished, thank you. ')
+except Exception as e:
+    with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
+        f.write(f'Error running landscape analysis: {e}\n')
+dirt = glob.glob('*#')
+for file in dirt:
+    subprocess.run(f'rm -f {file}')

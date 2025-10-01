@@ -1,6 +1,8 @@
 # xvg generator
 import pexpect
-import subprocess
+import subprocess as sp
+import glob
+import os
 
 def xvgenie(wdir):
     
@@ -8,19 +10,9 @@ def xvgenie(wdir):
     for file in edrs:
         file = os.path.splitext(file)[0]
         # Define the GROMACS command to run
-        gromacs_cmd = f"gmx energy -f {file}.edr -o potential_energy.xvg"
+        gromacs_cmd = sp.Popen(["g_energy","-f",f"{file}.edr","-o",f"{file}_potential.xvg"], stdout=sp.PIPE, stdin=sp.PIPE, stderr=sp.PIPE, text=True)
+        stdout, stderr = gromacs_cmd.communicate(input='Potential\n')
 
-        # Spawn the GROMACS process using pexpect
-        child = pexpect.spawn(gromacs_cmd)
-
-        child.expect('              :-) GROMACS')
-        child.sendline('Potential')
-        # Wait for the process to finish
-        child.expect(pexpect.EOF)
-
-        # Get the output from the process
-        output = child.before
-
-        # Save the output to a file
-        with open(f"{file}.xvg", "w") as f:
-            f.write(output)
+        if gromacs_cmd.returncode != 0:
+            with open(f'{wdir}/GMPP log.txt','a') as f:
+                f.write(f'Error in {stderr}')
