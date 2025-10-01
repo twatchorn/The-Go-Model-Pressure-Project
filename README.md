@@ -7,6 +7,7 @@ The landscapes will be generated with a series of combinations of the RMSF, nati
 
 Command line: python GMPP.py /path/to/smog/files.
 
+Note: use tprgenie.py not tprgen.py, i will remove it soon i just want to ensure proper version handling first.
 Example Landscapes for 1UBQ:
 <img width="640" height="641" alt="image" src="https://github.com/user-attachments/assets/20c92fd3-6ef5-40fa-8d35-4afae9c2c77c" /> 
 <img width="678" height="652" alt="image" src="https://github.com/user-attachments/assets/cb2d989e-c608-4e27-a61a-97ddf3205638" />
