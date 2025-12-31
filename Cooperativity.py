@@ -9,7 +9,7 @@ def main():
     parser.add_argument('directory', help='Path to the directory')
     args = parser.parse_args()
 
-    # Use the directory argument
+    
     directory_path = args.directory
     return directory_path
 
@@ -30,5 +30,6 @@ def cooperativity_check(wrkdir):
     WHAM.WHAM(f'{wrkdir}/7500')
     WHAM.WHAM(f'{wrkdir}/5000')
     WHAM.WHAM(f'{wrkdir}/2500')
+
 
 cooperativity_check(wrkdir)
