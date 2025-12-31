@@ -30,7 +30,7 @@ def main():
     parser.add_argument('directory', help='Path to the directory')
     args = parser.parse_args()
 
-    # Use the directory argument
+    
     directory_path = args.directory
     return directory_path
 
@@ -99,16 +99,14 @@ while iteration < max_iterations:
     except Exception as e:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write(f'Error generating TPR files: {e}\n')
-        break  # Exit on TPR generation failure
-
-    # Check if any .tpr files were actually created
+        break  
     tpr_files = glob.glob(f'{wrkdir}/*.tpr')
     if len(tpr_files) == 0:
         with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
             f.write('No TPR files found after generation. Check input files.\n')
         break
 
-    # Check if simulations actually ran (look for .xtc files)
+    
     xtc_files = glob.glob(f'{wrkdir}/*.xtc')
     dirt = glob.glob('*#')
 
@@ -177,13 +175,13 @@ while iteration < max_iterations:
             with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
                 f.write(f'Bimodal Temp = {foldingtemp} K\n')
                 
-            break  # Success - exit the loop
+            break  
             
         else:
-            # Expand temperature range for next iteration
+            
             tlow = tlow + 41
             thigh = thigh + 40
-              # Update the tuple
+              
             iteration += 1
             tg.tprgen(tlow, thigh, dt, wrkdir)
             with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
@@ -196,7 +194,7 @@ while iteration < max_iterations:
         thigh = thigh + 40
         iteration += 1
 
-    # After the loop, regardless of outcome
+    
 try:
     with open(f'{wrkdir}/GMPP log.txt', 'a') as f:
         f.write('Running WHAM analysis\n')
@@ -218,3 +216,4 @@ except Exception as e:
 dirt = glob.glob('*#')
 for file in dirt:
     subprocess.run(f'rm -f {file}')
+
